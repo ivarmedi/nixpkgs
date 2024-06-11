@@ -26,6 +26,8 @@ stdenv.mkDerivation (finalAttrs: {
 
   outputs = [ "out" "man" ];
 
+  strictDeps = true;
+
   patches = [ ./001-add-nixpkgs-retroarch-cores.patch ];
 
   nativeBuildInputs = [
