@@ -1,28 +1,30 @@
-{
-  lib,
-  stdenv,
-  cmake,
-  fetchzip,
-  pkg-config,
-  alsa-lib,
-  curl,
-  ffmpeg,
-  freeimage,
-  freetype,
-  libgit2,
-  poppler,
-  pugixml,
-  SDL2
+{ lib
+, SDL2
+, alsa-lib
+, cmake
+, fetchFromGitLab
+, ffmpeg
+, freeimage
+, freetype
+, libgit2
+, pkg-config
+, poppler
+, pugixml
+, stdenv
 }:
 
 stdenv.mkDerivation (finalAttrs: {
-  pname = "emulationstation-de";
+  pname = "es-de";
   version = "3.0.2";
 
-  src = fetchzip {
-    url = "https://gitlab.com/es-de/emulationstation-de/-/archive/v${finalAttrs.version}/emulationstation-de-v${finalAttrs.version}.tar.gz";
-    hash = "sha256:RGlXFybbXYx66Hpjp2N3ovK4T5VyS4w0DWRGNvbwugs=";
+  src = fetchFromGitLab {
+    owner = "es-de";
+    repo = "emulationstation-de";
+    rev = "v${finalAttrs.version}";
+    hash = "sha256-RGlXFybbXYx66Hpjp2N3ovK4T5VyS4w0DWRGNvbwugs=";
   };
+
+  outputs = [ "out" "man" ];
 
   patches = [ ./001-add-nixpkgs-retroarch-cores.patch ];
 
@@ -33,7 +35,6 @@ stdenv.mkDerivation (finalAttrs: {
 
   buildInputs = [
     alsa-lib
-    curl
     ffmpeg
     freeimage
     freetype
@@ -43,34 +44,27 @@ stdenv.mkDerivation (finalAttrs: {
     SDL2
   ];
 
-  installPhase = ''
-    # Binary
-    install -D ../es-de $out/bin/es-de
-
-    # Resources
-    mkdir -p $out/share/es-de/
-    cp -r ../resources/ $out/share/es-de/resources/
-
-    # Desktop file
-    mkdir -p $out/share/applications
-    cp ../es-app/assets/org.es_de.frontend.desktop $out/share/applications/
-
-    # Icon
-    mkdir -p $out/share/icons/hicolor/scalable/apps
-    cp ../es-app/assets/org.es_de.frontend.svg $out/share/icons/hicolor/scalable/apps/
-  '';
-
-  postInstall = ''
-    substituteInPlace $out/share/applications/org.es_de.frontend.desktop \
-      --replace "Exec=es-de" "Exec=$out/bin/es-de"
-  '';
+  cmakeFlags = [
+    "-DCMAKE_BUILD_TYPE=Release"
+    
+    # By default the application updater will be built
+    # which checks for new releases on startup, this disables it.
+    "-DAPPLICATION_UPDATER=off"
+    
+    # Sets the installation directory, also modifies code inside ES-DE
+    # used to locate the required program resources. Though I builds
+    # correctly without it.
+    # "-DCMAKE_INSTALL_PREFIX=$out"
+  ];
 
   meta = {
-    description = "EmulationStation Desktop Edition is a frontend for browsing and launching games from your multi-platform game collection.";
+    description = "Frontend for browsing and launching games from your multi-platform collection.";
     homepage = "https://es-de.org";
-    maintainers = with lib.maintainers; [ ivarmedi ];
+    downloadPage = "https://es-de.org/#Download";
+    changelog = "https://gitlab.com/es-de/emulationstation-de/-/blob/v${finalAttrs.version}/CHANGELOG.md";
     license = lib.licenses.mit;
-    platforms = lib.platforms.linux;
+    maintainers = with lib.maintainers; [ ashgoldofficial ivarmedi ];
     mainProgram = "es-de";
+    platforms = lib.platforms.linux;
   };
 })
