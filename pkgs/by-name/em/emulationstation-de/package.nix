@@ -28,7 +28,10 @@ stdenv.mkDerivation (finalAttrs: {
 
   strictDeps = true;
 
-  patches = [ ./001-add-nixpkgs-retroarch-cores.patch ];
+  patches = [
+    ./001-add-nixpkgs-retroarch-cores-unix.patch
+    ./002-add-nixpkgs-retroarch-cores-linux.patch
+  ];
 
   nativeBuildInputs = [
     cmake
@@ -48,11 +51,11 @@ stdenv.mkDerivation (finalAttrs: {
 
   cmakeFlags = [
     "-DCMAKE_BUILD_TYPE=Release"
-    
+
     # By default the application updater will be built
     # which checks for new releases on startup, this disables it.
     "-DAPPLICATION_UPDATER=off"
-    
+
     # Sets the installation directory, also modifies code inside ES-DE
     # used to locate the required program resources. Though I builds
     # correctly without it.
